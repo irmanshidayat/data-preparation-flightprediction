@@ -1,0 +1,326 @@
+## import necessary packages !
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+train_data = pd.read_excel("/content/drive/MyDrive/Babastudio/LSP AI/Latihan AI/Data Science/Data_Train.xlsx")
+
+train_data.head(4)
+
+train_data.tail(4)
+
+train_data.info()
+
+train_data.isnull().sum()
+
+train_data['Total_Stops'].isnull()
+
+train_data[train_data['Total_Stops'].isnull()]
+
+train_data.dropna(inplace=True)
+
+train_data.isnull().sum()
+
+train_data.dtypes
+
+train_data.info(memory_usage="deep")
+
+data = train_data.copy()
+
+data.columns
+
+data.head(2)
+
+data.dtypes
+
+def change_into_Datetime(col):
+  data[col] = pd.to_datetime(data[col])
+  
+import warnings
+from warnings import filterwarnings
+filterwarnings("ignore")
+
+data.columns
+
+for feature in ['Dep_Time', 'Arrival_Time', 'Date_of_Journey']:
+  change_into_Datetime(feature)
+  
+data.dtypes
+
+data["Journey_day"] = data['Date_of_Journey'].dt.day
+data["Journey_month"] = data['Date_of_Journey'].dt.month
+data["Journey_year"] = data['Date_of_Journey'].dt.year
+
+data.head(3)
+
+def extract_hour_min(df , col):
+  df[col+"_hour"] = df[col].dt.hour
+  df[col+"_minute"] = df[col].dt.minute
+  return df.head(3)
+  
+data.columns
+
+extract_hour_min(data , "Dep_Time")
+
+extract_hour_min(data , "Arrival_Time")
+
+cols_to_drop = ['Arrival_Time' , "Dep_Time"]
+data.drop(cols_to_drop , axis=1 , inplace=True)
+
+data.head(3)
+
+data.shape
+
+data.columns
+
+def flight_dep_time(x):
+  if(x>4) and (x<=8):
+    return "Early Morning"
+  elif (x>8) and (x<=12):
+    return "Morning"
+  elif (x>12) and (x<=16):
+    return "Noon"
+  elif (x>16) and (x<=20):
+    return "Evening"
+  elif (x>20) and (x<=24):
+    return "Night"
+
+  else:
+    return "late night"
+
+# Gunakan fungsi untuk membuat kategori dan hitung jumlahnya
+flight_times = data['Dep_Time_hour'].apply(flight_dep_time).value_counts()
+
+data['Dep_Time_hour'].apply(flight_dep_time).value_counts().plot(kind="bar" , color="g")
+
+# Install library
+!pip install plotly chart-studio
+
+# Import library
+import plotly.graph_objs as go
+import chart_studio
+import chart_studio.plotly as py
+import chart_studio.tools as tls
+import plotly.io as pio
+
+!pip install cufflinks
+import cufflinks as cf
+
+# Inisialisasi cufflinks untuk bekerja dengan offline mode
+cf.go_offline()
+
+data['Dep_Time_hour'].apply(flight_dep_time).head()
+data['Dep_Time_hour'].apply(flight_dep_time).value_counts()
+
+import cufflinks as cf
+cf.go_offline()  # Inisialisasi untuk mode offline
+
+
+!pip install plotly
+
+import plotly.graph_objs as go
+import plotly.io as pio
+
+# Pastikan Plotly menggunakan renderer yang kompatibel dengan Google Colab atau Jupyter Notebook
+pio.renderers.default = "colab"  # Untuk Google Colab
+# Atau gunakan "notebook" jika Anda menggunakan Jupyter Notebook
+# pio.renderers.default = "notebook"
+
+# Data untuk grafik
+fig = go.Figure(data=[
+    go.Bar(
+        x=flight_times.index,   # Kategori pada sumbu X
+        y=flight_times.values,  # Jumlah pada sumbu Y
+    )
+])
+
+# Tambahkan detail pada grafik
+fig.update_layout(
+    title="Flight Departure Times",      # Judul grafik
+    xaxis_title="Time of Day",           # Label sumbu X
+    yaxis_title="Count",                 # Label sumbu Y
+    template="plotly"                    # Tema grafik
+)
+
+# Tampilkan grafik
+fig.show()
+
+fig = go.Figure(data=[
+    go.Bar(
+        x=flight_times.index,
+        y=flight_times.values,
+        marker_color='lightskyblue',   # Warna batang
+        text=flight_times.values,      # Menambahkan teks jumlah pada batang
+        textposition='auto'            # Posisi teks otomatis
+    )
+])
+
+fig.update_layout(
+    title="Flight Departure Times",
+    xaxis_title="Time of Day",
+    yaxis_title="Count",
+    template="plotly_dark"             # Menggunakan tema gelap
+)
+
+fig.show()
+
+def preprocess_duration(x):
+    if 'h' not in x:
+        x = '0h' + ' ' + x
+    elif 'm' not in x:
+        x = x + ' ' + '0m'
+    return x
+
+data['Duration'] = data['Duration'].apply(preprocess_duration)
+
+data['Duration']
+
+data['Duration'] [0]
+'2h 50m'.split(' ')
+'2h 50m'.split(' ')[0]
+'2h 50m'.split(' ')[0][0:-1]
+type('2h 50m'.split(' ')[0][0:-1])
+int('2h 50m'.split(' ')[0][0:-1])
+int('2h 50m'.split(' ')[1][0:-1])
+
+data['Duration'].apply(lambda x : int(x.split(' ')[0][0:-1]))
+data['Duration'].apply(lambda x : int(x.split(' ')[1][0:-1]))
+
+data.head(2)
+
+data['Duration']
+
+2*60
+'2*60'
+eval('2*60')
+
+data['Duration_total_mins'] = data['Duration'].str.replace('h' , "*60").str.replace(' ' , "+").str.replace('m' , "*1").apply(eval)
+data['Duration_total_mins']
+
+data.columns
+
+sns.scatterplot(x="Duration_total_mins" , y="Price" , data=data)
+sns.scatterplot(x="Duration_total_mins" , y="Price" , hue="Total_Stops" , data=data)
+sns.lmplot(x="Duration_total_mins" , y="Price" , data=data)
+
+data["Airline"]=='Jet Airways'
+
+data[data["Airline"]=='Jet Airways'].groupby('Route').size().sort_values(ascending=False)
+
+data.columns
+
+sns.boxplot(y='Price' , x='Airline' , data=data.sort_values('Price' , ascending=False))
+plt.xticks(rotation="vertical")
+plt.show
+
+data.columns
+
+data.head()
+
+# Ekspor data Hasil Pelatihan
+
+import pandas as pd
+from google.colab import files
+
+# Path file Excel
+file_path = '/content/drive/MyDrive/Babastudio/LSP AI/Latihan AI/Data Science/Data_Train.xlsx'
+
+# Membaca file Excel ke dalam DataFrame
+data = pd.read_excel(file_path)
+
+# Tambahkan kolom Journey_day, Journey_month, Journey_year dari Date_of_Journey
+data['Journey_day'] = pd.to_datetime(data['Date_of_Journey']).dt.day
+data['Journey_month'] = pd.to_datetime(data['Date_of_Journey']).dt.month
+data['Journey_year'] = pd.to_datetime(data['Date_of_Journey']).dt.year
+
+# Tambahkan kolom Dep_Time_hour, Dep_Time_minute dari Dep_Time
+data['Dep_Time_hour'] = pd.to_datetime(data['Dep_Time']).dt.hour
+data['Dep_Time_minute'] = pd.to_datetime(data['Dep_Time']).dt.minute
+
+# Tambahkan kolom Arrival_Time_hour, Arrival_Time_minute dari Arrival_Time
+data['Arrival_Time_hour'] = pd.to_datetime(data['Arrival_Time']).dt.hour
+data['Arrival_Time_minute'] = pd.to_datetime(data['Arrival_Time']).dt.minute
+
+# Tambahkan kolom Duration_total_mins dari Duration
+def convert_duration_to_minutes(duration):
+    # Pisahkan jam dan menit
+    hours = 0
+    minutes = 0
+    if 'h' in duration:
+        hours = int(duration.split('h')[0])
+    if 'm' in duration:
+        minutes = int(duration.split('h')[-1].split('m')[0]) if 'h' in duration else int(duration.split('m')[0])
+    return hours * 60 + minutes
+
+data['Duration_total_mins'] = data['Duration'].apply(convert_duration_to_minutes)
+
+# Pilih kolom yang diinginkanc
+selected_columns = [
+    'Airline', 'Date_of_Journey', 'Source', 'Destination', 'Route',
+    'Duration', 'Total_Stops', 'Additional_Info', 'Price', 'Journey_day',
+    'Journey_month', 'Journey_year', 'Dep_Time_hour', 'Dep_Time_minute',
+    'Arrival_Time_hour', 'Arrival_Time_minute', 'Duration_total_mins'
+]
+
+# Filter data dengan kolom yang sudah lengkap
+filtered_data = data[selected_columns]
+
+# Simpan hasil olahan ke file Excel
+output_path = '/content/drive/MyDrive/Babastudio/LSP AI/Latihan AI/Data Science/filtered_data.xlsx'
+filtered_data.to_excel(output_path, index=False)
+
+# Download file hasil olahan
+files.download(output_path)
+
+# menggabungkan file sebelumnya dengan hasil pengolahan data baru
+
+import pandas as pd
+
+# Membaca file Excel lama dan baru
+file_lama = "/content/drive/MyDrive/Babastudio/LSP AI/Latihan AI/Data Science/data_airlines_sebelumnya.xlsx"
+file_baru = "/content/drive/MyDrive/Babastudio/LSP AI/Latihan AI/Data Science/Data_Train.xlsx"
+
+df_lama = pd.read_excel(file_lama)
+df_baru = pd.read_excel(file_baru)
+
+# Tambahkan kolom yang hilang pada df_baru
+# Journey_day, Journey_month, Journey_year dari Date_of_Journey
+df_baru['Journey_day'] = pd.to_datetime(df_baru['Date_of_Journey']).dt.day
+df_baru['Journey_month'] = pd.to_datetime(df_baru['Date_of_Journey']).dt.month
+df_baru['Journey_year'] = pd.to_datetime(df_baru['Date_of_Journey']).dt.year
+
+# Dep_Time_hour, Dep_Time_minute dari Dep_Time
+df_baru['Dep_Time_hour'] = pd.to_datetime(df_baru['Dep_Time']).dt.hour
+df_baru['Dep_Time_minute'] = pd.to_datetime(df_baru['Dep_Time']).dt.minute
+
+# Arrival_Time_hour, Arrival_Time_minute dari Arrival_Time
+df_baru['Arrival_Time_hour'] = pd.to_datetime(df_baru['Arrival_Time']).dt.hour
+df_baru['Arrival_Time_minute'] = pd.to_datetime(df_baru['Arrival_Time']).dt.minute
+
+# Duration_total_mins dari Duration
+def convert_duration_to_minutes(duration):
+    hours = 0
+    minutes = 0
+    if 'h' in duration:
+        hours = int(duration.split('h')[0])
+    if 'm' in duration:
+        minutes = int(duration.split('h')[-1].split('m')[0]) if 'h' in duration else int(duration.split('m')[0])
+    return hours * 60 + minutes
+
+df_baru['Duration_total_mins'] = df_baru['Duration'].apply(convert_duration_to_minutes)
+
+# Pastikan urutan kolom df_baru sama dengan df_lama
+df_baru = df_baru[df_lama.columns]
+
+# Gabungkan data
+df_gabungan = pd.concat([df_lama, df_baru], ignore_index=True)
+
+# Simpan hasil gabungan ke file Excel baru
+output_file = "/content/drive/MyDrive/Babastudio/LSP AI/Latihan AI/Data Science/file_gabungan.xlsx"
+df_gabungan.to_excel(output_file, index=False)
+
+print(f"Data berhasil digabungkan dan disimpan ke file: {output_file}")
+
+
