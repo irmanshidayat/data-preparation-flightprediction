@@ -1,0 +1,198 @@
+# Import Library
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Proses: Mengimpor library yang diperlukan untuk analisis data, visualisasi, dan manipulasi data.
+
+# Membaca Data
+train_data = pd.read_excel("/content/drive/MyDrive/Babastudio/LSP AI/Latihan AI/Data Science/Data_Train.xlsx")
+train_data.head(4)
+train_data.tail(4)
+train_data.info()
+train_data.isnull().sum()
+
+# Proses:
+# 1. Membaca file Excel ke dalam DataFrame.
+# 2. Menampilkan 4 baris pertama dan terakhir.
+# 3. Menampilkan informasi struktur data (tipe data, jumlah kolom, dll).
+# 4. Menghitung jumlah nilai yang hilang di setiap kolom.
+
+# Menangani Missing Value
+train_data['Total_Stops'].isnull()
+train_data[train_data['Total_Stops'].isnull()]
+train_data.dropna(inplace=True)
+train_data.isnull().sum()
+
+# Proses:
+# 1. Mengecek kolom `Total_Stops` untuk missing values.
+# 2. Memfilter data dengan nilai `null` pada kolom tersebut.
+# 3. Menghapus baris dengan nilai `null`.
+# 4. Memastikan tidak ada lagi nilai `null`.
+
+# Copy Data
+data = train_data.copy()
+data.columns
+data.head(2)
+data.dtypes
+
+# Proses:
+# 1. Membuat salinan DataFrame untuk menjaga data asli.
+# 2. Menampilkan daftar kolom dan 2 baris pertama.
+# 3. Mengecek tipe data kolom.
+
+# Mengubah Format Data
+def change_into_Datetime(col):
+    data[col] = pd.to_datetime(data[col])
+
+for feature in ['Dep_Time', 'Arrival_Time', 'Date_of_Journey']:
+    change_into_Datetime(feature)
+
+# Proses:
+# 1. Membuat fungsi untuk mengubah kolom tertentu menjadi format datetime.
+# 2. Menerapkan fungsi tersebut pada kolom terkait.
+
+# Ekstraksi Data Waktu
+data["Journey_day"] = data['Date_of_Journey'].dt.day
+data["Journey_month"] = data['Date_of_Journey'].dt.month
+data["Journey_year"] = data['Date_of_Journey'].dt.year
+
+# Proses: Mengekstrak hari, bulan, dan tahun dari kolom `Date_of_Journey`.
+
+# Ekstraksi Jam dan Menit
+def extract_hour_min(df , col):
+    df[col+"_hour"] = df[col].dt.hour
+    df[col+"_minute"] = df[col].dt.minute
+    return df.head(3)
+
+extract_hour_min(data , "Dep_Time")
+extract_hour_min(data , "Arrival_Time")
+
+# Proses: Mengekstrak jam dan menit dari kolom waktu.
+
+# Menghapus Kolom Tidak Diperlukan
+cols_to_drop = ['Arrival_Time' , "Dep_Time"]
+data.drop(cols_to_drop , axis=1 , inplace=True)
+
+# Proses: Menghapus kolom yang tidak lagi diperlukan untuk analisis.
+
+# Kategorisasi Waktu Keberangkatan
+def flight_dep_time(x):
+    if(x>4) and (x<=8):
+        return "Early Morning"
+    elif (x>8) and (x<=12):
+        return "Morning"
+    elif (x>12) and (x<=16):
+        return "Noon"
+    elif (x>16) and (x<=20):
+        return "Evening"
+    elif (x>20) and (x<=24):
+        return "Night"
+    else:
+        return "late night"
+
+# Proses: Membuat kategori berdasarkan jam keberangkatan.
+
+# Visualisasi Data
+flight_times = data['Dep_Time_hour'].apply(flight_dep_time).value_counts()
+flight_times.plot(kind="bar" , color="g")
+
+# Proses: Menghitung frekuensi dan memvisualisasikan waktu keberangkatan menggunakan grafik batang.
+
+# Instalasi dan Inisialisasi Library
+!pip install plotly chart-studio cufflinks
+import plotly.graph_objs as go
+import chart_studio\import cufflinks as cf
+cf.go_offline()
+
+# Proses: Instalasi dan inisialisasi library untuk visualisasi interaktif.
+
+# Visualisasi Interaktif
+fig = go.Figure(data=[
+    go.Bar(
+        x=flight_times.index,
+        y=flight_times.values,
+        marker_color='lightskyblue',
+        text=flight_times.values,
+        textposition='auto'
+    )
+])
+fig.update_layout(
+    title="Flight Departure Times",
+    xaxis_title="Time of Day",
+    yaxis_title="Count",
+    template="plotly_dark"
+)
+fig.show()
+
+# Proses: Membuat grafik interaktif menggunakan Plotly.
+
+# Preprocessing Kolom Duration
+def preprocess_duration(x):
+    if 'h' not in x:
+        x = '0h ' + x
+    if 'm' not in x:
+        x = x + ' 0m'
+    return x
+data['Duration'] = data['Duration'].apply(preprocess_duration)
+
+# Proses: Membersihkan dan memformat data durasi penerbangan.
+
+# Hitung Total Durasi
+data['Duration_total_mins'] = data['Duration'].str.replace('h' , "*60").str.replace(' ' , "+").str.replace('m' , "*1").apply(eval)
+
+# Proses: Mengonversi durasi menjadi menit total.
+
+# Analisis dan Visualisasi
+sns.scatterplot(x="Duration_total_mins" , y="Price" , data=data)
+sns.boxplot(y='Price' , x='Airline' , data=data.sort_values('Price' , ascending=False))
+
+# Proses: Membuat scatter plot dan box plot untuk menganalisis hubungan durasi dan harga.
+
+# Ekspor Data
+output_path = '/content/drive/MyDrive/Babastudio/LSP AI/Latihan AI/Data Science/filtered_data.xlsx'
+data.to_excel(output_path, index=False)
+files.download(output_path)
+
+# Proses: Mengekspor hasil olahan data ke file Excel dan mendownloadnya.
+
+# Menggabungkan Data
+file_lama = "/content/drive/MyDrive/Babastudio/LSP AI/Latihan AI/Data Science/data_airlines_sebelumnya.xlsx"
+file_baru = "/content/drive/MyDrive/Babastudio/LSP AI/Latihan AI/Data Science/Data_Train.xlsx"
+
+df_lama = pd.read_excel(file_lama)
+df_baru = pd.read_excel(file_baru)
+
+# Tambahkan kolom yang hilang pada df_baru
+df_baru['Journey_day'] = pd.to_datetime(df_baru['Date_of_Journey']).dt.day
+df_baru['Journey_month'] = pd.to_datetime(df_baru['Date_of_Journey']).dt.month
+df_baru['Journey_year'] = pd.to_datetime(df_baru['Date_of_Journey']).dt.year
+df_baru['Dep_Time_hour'] = pd.to_datetime(df_baru['Dep_Time']).dt.hour
+df_baru['Dep_Time_minute'] = pd.to_datetime(df_baru['Dep_Time']).dt.minute
+df_baru['Arrival_Time_hour'] = pd.to_datetime(df_baru['Arrival_Time']).dt.hour
+df_baru['Arrival_Time_minute'] = pd.to_datetime(df_baru['Arrival_Time']).dt.minute
+
+def convert_duration_to_minutes(duration):
+    hours = 0
+    minutes = 0
+    if 'h' in duration:
+        hours = int(duration.split('h')[0])
+    if 'm' in duration:
+        minutes = int(duration.split('h')[-1].split('m')[0]) if 'h' in duration else int(duration.split('m')[0])
+    return hours * 60 + minutes
+
+df_baru['Duration_total_mins'] = df_baru['Duration'].apply(convert_duration_to_minutes)
+df_baru = df_baru[df_lama.columns]
+
+# Gabungkan data
+df_gabungan = pd.concat([df_lama, df_baru], ignore_index=True)
+output_file = "/content/drive/MyDrive/Babastudio/LSP AI/Latihan AI/Data Science/file_gabungan.xlsx"
+df_gabungan.to_excel(output_file, index=False)
+print(f"Data berhasil digabungkan dan disimpan ke file: {output_file}")
+
+# Proses:
+# 1. Membaca data lama dan baru.
+# 2. Menambahkan kolom yang hilang.
+# 3. Menyatukan data berdasarkan urutan kolom.
+# 4. Mengekspor hasil gabungan ke file Excel baru.
